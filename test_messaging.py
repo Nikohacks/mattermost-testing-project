@@ -141,28 +141,37 @@ with sync_playwright() as p:
     
     # TC-12: Direct message
     print("\n--- TC-12: Direct Message ---")
-    context12 = browser.new_context()
+    context12 = browser.new_context(viewport={'width': 1920, 'height': 1080})
     page12 = context12.new_page()
     login(page12)
-    
-    # Open direct message
-    page12.click("#addChannelsCta")
-    page12.wait_for_timeout(500)
-    page12.click("text=Open a Direct Message")
-    page12.wait_for_timeout(500)
-    page12.locator("input[placeholder*='Search' i]").first.fill(USER2)
-    page12.wait_for_timeout(2000)
-    page12.locator(f"text={USER2}").first.click()
-    page12.click("button:has-text('Go')")
+    page12.goto(f"{BASE}/core/channels/ceilingtest-01")
     page12.wait_for_selector("#post_textbox", timeout=15000)
     
-    # Send direct message
+    page12.click("#newDirectMessageButton")
+    page12.wait_for_timeout(500)
+    
+    search_input = page12.locator("input[aria-label='Search for people']")
+    expect(search_input).to_be_visible(timeout=5000)
+    search_input.fill(USER2)
+    page12.wait_for_timeout(2000)
+    
+    user_row = page12.locator(".more-modal__row").first
+    expect(user_row).to_be_visible(timeout=5000)
+    user_row.click()
+    page12.wait_for_timeout(500)
+    
+    go_button = page12.locator("#saveItems, button:has-text('Go')")
+    expect(go_button).to_be_visible(timeout=5000)
+    go_button.click()
+    page12.wait_for_timeout(3000)
+    
+    page12.wait_for_selector("#post_textbox", timeout=15000)
+    
     m12 = f"TC12 DM {int(time.time())}"
     page12.fill("#post_textbox", m12)
     page12.keyboard.press("Enter")
-    expect(page12.locator(f"text={m12}").first).to_be_visible(timeout=10000)
-    print("TC-12: PASS - Direct message delivered")
-    context12.close()
+    page12.wait_for_timeout(2000)
     
-    browser.close()
-    print("\n--- All messaging tests completed ---")
+    expect(page12.locator(f".post-message__text:has-text('{m12}')").first).to_be_visible(timeout=10000)
+    print("TC-12: PASS - Direct message delivered")
+    context12.close()    print("\n--- All messaging tests completed ---")
