@@ -88,7 +88,7 @@ with sync_playwright() as p:
     
     context10.close()
     
-        # TC-11: Delete message
+    # TC-11: Delete message
     print("\n--- TC-11: Delete Message ---")
     context11 = browser.new_context()
     page11 = context11.new_page()
@@ -103,41 +103,41 @@ with sync_playwright() as p:
     # Wait for message
     page11.wait_for_timeout(2000)
     
-    # Find the post by the message text in post-message__text
+    # Find the post by the message text
     message_post = page11.locator(f".post-message__text:has-text('{m11}')").first
     expect(message_post).to_be_visible(timeout=10000)
     
-    # Hover over the post__body
-    post_body = message_post.locator("xpath=ancestor::div[@class='post__body']")
-    post_body.first.hover()
-    page11.wait_for_timeout(1000)
-    
-    # Use JavaScript to force click the three-dot menu
-    page11.evaluate(f"""
-        const post = document.querySelector('[data-testid="postContent"]');
-        if (post) {{
-            const menuButton = post.querySelector('button[data-testid^="PostDotMenu-Button"]');
-            if (menuButton) {{
-                menuButton.click();
-            }}
-        }}
-    """)
+    # Hover the post message to trigger the menu to appear
+    message_post.hover()
     page11.wait_for_timeout(500)
     
-    # Click Delete from dropdown using exact selector
+    # Find the post container and hover it to ensure menu appears
+    post_container = page11.locator(f".post:has(.post-message__text:has-text('{m11}'))").first
+    post_container.hover()
+    page11.wait_for_timeout(500)
+    
+    # Click the three-dot menu button directly (force since it's hidden by default)
+    menu_button = post_container.locator("[data-testid^=\"PostDotMenu-Button\"]").first
+    menu_button.click(force=True)
+    page11.wait_for_timeout(500)
+    
+    # Click Delete from dropdown
     delete_option = page11.locator('li:has-text("Delete")').first
     expect(delete_option).to_be_visible(timeout=5000)
     delete_option.click()
     page11.wait_for_timeout(500)
     
     # Confirm deletion
-    page11.click("button:has-text('Delete')")
+    delete_confirm = page11.locator("button:has-text('Delete')").first
+    expect(delete_confirm).to_be_visible(timeout=5000)
+    delete_confirm.click()
     page11.wait_for_timeout(3000)
     
     # Verify message is gone
     assert page11.locator(f".post-message__text:has-text('{m11}')").count() == 0
     print("TC-11: PASS - Message deleted with confirmation")
-    context11.close()
+    context11.close()    
+
     
     # TC-12: Direct message
     print("\n--- TC-12: Direct Message ---")
